@@ -2,6 +2,7 @@ import 'package:carbon_icons/carbon_icons.dart';
 import 'package:flutter/widgets.dart';
 import 'package:wealth_and_health_frontend/components/app_skeleton.dart';
 import 'package:wealth_and_health_frontend/components/navbar.dart';
+import 'package:wealth_and_health_frontend/page_home/map_page.dart';
 import 'package:wealth_and_health_frontend/page_home/new_record.dart';
 import 'package:wealth_and_health_frontend/styles.dart';
 
@@ -39,11 +40,15 @@ class _HomePageState extends State<HomePage> {
       child: Stack(
         children: [
           PageView(
+            physics:
+                (_currentPage == 2.00)
+                    ? NeverScrollableScrollPhysics()
+                    : BouncingScrollPhysics(),
             controller: _pageController,
             children: [
               NewRecord(),
               Text("hi2", style: TextStyle(color: AppStyles.primaryForeground)),
-              Text("hi3", style: TextStyle(color: AppStyles.primaryForeground)),
+              MapPage(),
               Text("hi3", style: TextStyle(color: AppStyles.primaryForeground)),
             ],
           ),
