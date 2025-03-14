@@ -3,7 +3,7 @@ import 'package:wealth_and_health_frontend/styles.dart';
 
 class AppSkeleton extends StatelessWidget {
   const AppSkeleton({super.key, this.child, Color? color})
-    : color = color ?? AppStyles.primaryBackground;
+    : color = color ?? AppStyles.secondaryBackground;
 
   final Widget? child;
   final Color color;
