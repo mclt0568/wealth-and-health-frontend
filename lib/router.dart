@@ -9,7 +9,7 @@ class AppRouter {
 
     // Home Page (Static)
     if (uri.path == '/') {
-      return PageRouteBuilder(pageBuilder: (_, __, ___) => const HomePage());
+      return PageRouteBuilder(pageBuilder: (_, __, ___) => HomePage());
     }
 
     // // Details Page (Dynamic with query parameters)
@@ -24,7 +24,7 @@ class AppRouter {
     // }
 
     return PageRouteBuilder(
-      pageBuilder: (_, __, ___) => const HomePage(),
+      pageBuilder: (_, __, ___) => HomePage(),
     ); // Unknown route
   }
 }
