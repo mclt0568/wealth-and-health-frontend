@@ -10,8 +10,8 @@ class AppSkeleton extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      child: child,
       padding: EdgeInsets.fromLTRB(0, padding.top, 0, padding.bottom),
+      child: child,
     );
   }
 }
