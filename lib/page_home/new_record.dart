@@ -1,6 +1,10 @@
 import 'dart:ffi';
 
+import 'package:carbon_icons/carbon_icons.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:wealth_and_health_frontend/models/entry_category.dart';
 import 'package:wealth_and_health_frontend/styles.dart';
 import 'package:intl/intl.dart';
 
@@ -17,6 +21,15 @@ class _NewRecordState extends State<NewRecord> {
   late TextEditingController _remarkController;
   late FocusNode _remarkNode;
   late DateTime _date;
+  late int _category;
+
+  final List<EntryCategory> _categories = [
+    EntryCategory(name: "Food", icon: CarbonIcons.noodle_bowl),
+    EntryCategory(name: "1", icon: CarbonIcons.noodle_bowl),
+    EntryCategory(name: "2", icon: CarbonIcons.noodle_bowl),
+    EntryCategory(name: "2", icon: CarbonIcons.noodle_bowl),
+    EntryCategory(name: "2", icon: CarbonIcons.noodle_bowl),
+  ];
 
   Future<void> chooseDate() async {
     DateTime? pickedDate = await showDatePicker(
@@ -36,6 +49,7 @@ class _NewRecordState extends State<NewRecord> {
   @override
   void initState() {
     super.initState();
+    _category = 0;
     _priceNode = FocusNode();
     _priceController = TextEditingController();
     _priceController.text = "0.00";
@@ -158,6 +172,100 @@ class _NewRecordState extends State<NewRecord> {
                 ),
               ),
             ],
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 30),
+            child: Container(
+              height: 240,
+              child: SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    for (var categoryEntry in _categories.asMap().entries)
+                      Container(
+                        decoration: BoxDecoration(
+                          color:
+                              (categoryEntry.key == _category)
+                                  ? AppStyles.accentBackground
+                                  : AppStyles.primaryBackground,
+                        ),
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _category = categoryEntry.key;
+                              });
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.only(right: 10),
+                                    child: Icon(
+                                      categoryEntry.value.icon,
+                                      color:
+                                          (categoryEntry.key == _category)
+                                              ? AppStyles.accentForeground
+                                              : AppStyles.primaryForeground,
+                                    ),
+                                  ),
+                                  IntrinsicWidth(
+                                    child: Text(
+                                      categoryEntry.value.name,
+                                      style: TextStyle(
+                                        fontSize: AppStyles.paragraph.fontSize,
+                                        color:
+                                            (categoryEntry.key == _category)
+                                                ? AppStyles.accentForeground
+                                                : AppStyles.primaryForeground,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(color: AppStyles.accentForeground),
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _priceController.text = "0.00";
+                    _remarkController.text = "";
+                    _category = 0;
+                    _date = DateTime.now();
+                    Fluttertoast.showToast(
+                      msg: "Submitted",
+                      toastLength: Toast.LENGTH_SHORT,
+                    );
+                  });
+                }, // SUBMIT
+                child: Container(
+                  padding: EdgeInsets.all(20),
+                  child: Center(
+                    child: Text(
+                      "Submit",
+                      style: TextStyle(
+                        fontSize: AppStyles.paragraph.fontSize,
+                        color: AppStyles.primaryBackground,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
