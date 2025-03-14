@@ -27,4 +27,8 @@ class AppStyles {
     fontSize: 20,
     color: AppStyles.primaryForeground,
   );
+  static const TextStyle accentedParagraph = TextStyle(
+    fontSize: 20,
+    color: AppStyles.accentForeground,
+  );
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'router.dart';
 
@@ -16,6 +17,13 @@ class MyApp extends StatelessWidget {
       color: const Color.fromARGB(255, 255, 255, 255),
       initialRoute: AppRouter.initialRoute,
       onGenerateRoute: AppRouter.onGenerateRoute,
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate, // Provides Material localization
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: [
+        Locale('en', 'US'), // Add other locales if needed
+      ],
     );
   }
 }
