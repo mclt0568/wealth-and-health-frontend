@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:carbon_icons/carbon_icons.dart';
 import 'package:flutter/foundation.dart';
@@ -66,6 +67,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
 
     final rawSpendings = result["spendings"] as List<dynamic>;
+
     final spendings = rawSpendings.map(SpendingEntry.fromJson).toList();
     setState(() {
       _spendings = spendings;
@@ -183,24 +185,27 @@ class _DashboardPageState extends State<DashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (var spendings in _categorySpendings.entries)
-                  Row(
-                    children: [
-                      Icon(categories[spendings.key].icon),
-                      SizedBox(width: 5),
-                      IntrinsicWidth(
-                        child: Text(
-                          categories[spendings.key].name,
-                          style: AppStyles.paragraph,
+                  Padding(
+                    padding: EdgeInsets.only(top: spendings.key * 10),
+                    child: Row(
+                      children: [
+                        Icon(categories[spendings.key].icon),
+                        SizedBox(width: 5),
+                        IntrinsicWidth(
+                          child: Text(
+                            categories[spendings.key].name,
+                            style: AppStyles.paragraph,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          spendings.value.toString(),
-                          style: AppStyles.accentedParagraph,
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            spendings.value.toString(),
+                            style: AppStyles.accentedParagraph,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
               ],
             ),

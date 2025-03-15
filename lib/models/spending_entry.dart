@@ -57,10 +57,28 @@ class SpendingEntry {
         "date": String isoDate,
         "remark": String remark,
         "location": String _,
+        "user": String _,
       } =>
         SpendingEntry(
           id: id,
           price: price,
+          category: categories[categoryIndex],
+          date: DateTime.parse(isoDate),
+          remark: remark,
+          location: LatLng(0, 0),
+        ),
+      {
+        '_id': String id,
+        'price': int price,
+        'category': int categoryIndex,
+        "date": String isoDate,
+        "remark": String remark,
+        "location": String _,
+        "user": String _,
+      } =>
+        SpendingEntry(
+          id: id,
+          price: price.toDouble(),
           category: categories[categoryIndex],
           date: DateTime.parse(isoDate),
           remark: remark,
