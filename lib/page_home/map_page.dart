@@ -1,10 +1,15 @@
 import "dart:async";
+import "dart:convert";
 
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter/widgets.dart";
+import "package:fluttertoast/fluttertoast.dart";
 import "package:geolocator/geolocator.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
+import "package:wealth_and_health_frontend/models/analytics.dart";
+import "package:wealth_and_health_frontend/models/location.dart";
+import "package:wealth_and_health_frontend/requests.dart";
 
 class MapPage extends StatefulWidget {
   MapPage({super.key});
@@ -18,8 +23,54 @@ class _MapPageState extends State<MapPage> {
       Completer<GoogleMapController>();
 
   LatLng _currentPosition = LatLng(0, 0);
+  Map<String, List<AnalyticsEntry>> _analyticsOfLocation = {};
+  Map<String, MapLocation> _locLookup = {};
 
-  Set<Marker> _markers = {}; // Store all markers
+  Set<Marker> _markers = {};
+
+  late bool _disposed;
+
+  Future<void> _fetchMarkers() async {
+    final response = await FetchRequest("location").commit();
+    final result = jsonDecode(response.body);
+
+    // get locations
+    final locationsRaw = result["locations"] as List<dynamic>;
+    final locations = locationsRaw.map(MapLocation.fromJson);
+    final Map<String, MapLocation> locLookup = {};
+    for (var location in locations) {
+      locLookup[location.id] = location;
+    }
+
+    // analytics from json with location lookup funtion
+    curriedAnalyticsFromJson(dynamic json) {
+      return AnalyticsEntry.fromJsonWithLocation(json, locLookup);
+    }
+
+    // get analytics
+    final analyticsRawMap = result["analytics"] as Map<String, dynamic>;
+    Map<String, List<AnalyticsEntry>> analyticsOfLocation = {};
+    for (var analyticRaw in analyticsRawMap.entries) {
+      final locId = analyticRaw.key;
+      final analyticRawList = analyticRaw.value as List<dynamic>;
+      final analyticList =
+          analyticRawList.map(curriedAnalyticsFromJson).toList();
+      analyticsOfLocation[locId] = analyticList;
+    }
+
+    if (_disposed) {
+      return;
+    }
+
+    setState(() {
+      _analyticsOfLocation = analyticsOfLocation;
+      _locLookup = locLookup;
+    });
+
+    for (var location in locLookup.values) {
+      _addMarker(location.coord, location.name, location.id);
+    }
+  }
 
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
@@ -42,9 +93,11 @@ class _MapPageState extends State<MapPage> {
 
     // Get current position
     Position position = await Geolocator.getCurrentPosition();
-    setState(() {
-      _currentPosition = LatLng(position.latitude, position.longitude);
-    });
+    if (!_disposed) {
+      setState(() {
+        _currentPosition = LatLng(position.latitude, position.longitude);
+      });
+    }
 
     // Move camera to current location
     final GoogleMapController controller = await _controller.future;
@@ -60,35 +113,58 @@ class _MapPageState extends State<MapPage> {
     controller.setMapStyle(style);
   }
 
-  void _addMarker(LatLng position, String title) {
+  void _addMarker(LatLng position, String title, String locationId) {
     Marker newMarker = Marker(
-      markerId: MarkerId(position.toString()),
+      markerId: MarkerId(locationId),
       position: position,
       infoWindow: InfoWindow(
         title: title,
-        snippet: "Tap for more info",
+        snippet: "Tap to see average spending per week here",
         onTap: () {
-          _onMarkerTapped(title);
+          _onMarkerTapped(locationId);
         },
       ),
       icon: BitmapDescriptor.defaultMarkerWithHue(
-        BitmapDescriptor.hueBlue,
+        BitmapDescriptor.hueRed,
       ), // Custom color
     );
 
-    setState(() {
-      _markers.add(newMarker);
-    });
+    if (!_disposed) {
+      setState(() {
+        _markers.add(newMarker);
+      });
+    }
   }
 
   /// Show dialog when a marker is tapped
-  void _onMarkerTapped(String markerTitle) {
+  void _onMarkerTapped(String locationId) {
+    final location = _locLookup[locationId] ?? fallbackLocation;
+
+    final locationName = location.name;
+
+    if (_analyticsOfLocation[locationId] == null) {
+      Fluttertoast.showToast(msg: "This location is currently unavailable");
+      return;
+    }
+
+    final analyticTexts = _analyticsOfLocation[locationId]!.map((dataPoint) {
+      final catName = dataPoint.category.name;
+      final catAvg = dataPoint.average;
+      final catN = dataPoint.n;
+
+      return "$catN spending(s) on $catName with average of $catAvg";
+    });
+
+    final analyticText = analyticTexts.join("\n\n");
+
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: Text("Marker Tapped"),
-            content: Text("You tapped on: $markerTitle"),
+            title: Text("Average Spending"),
+            content: Text(
+              "Average Spending at $locationName: \n\n$analyticText",
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -100,8 +176,16 @@ class _MapPageState extends State<MapPage> {
   }
 
   @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
   void initState() {
+    _disposed = false;
     super.initState();
+    _fetchMarkers();
     _getCurrentLocation();
   }
 

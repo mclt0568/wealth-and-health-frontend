@@ -24,20 +24,25 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   late DateTime _date;
   Map<int, double> _categorySpendings = {};
+  late bool _disposed;
 
   List<SpendingEntry> _spendings = [];
 
   Future<void> _nextDay() async {
-    setState(() {
-      _date = _date.add(Duration(days: 1));
-    });
+    if (!_disposed) {
+      setState(() {
+        _date = _date.add(Duration(days: 1));
+      });
+    }
     await _getCategorySpendings();
   }
 
   Future<void> _prevDay() async {
-    setState(() {
-      _date = _date.subtract(Duration(days: 1));
-    });
+    if (!_disposed) {
+      setState(() {
+        _date = _date.subtract(Duration(days: 1));
+      });
+    }
     await _getCategorySpendings();
   }
 
@@ -50,9 +55,11 @@ class _DashboardPageState extends State<DashboardPage> {
     );
 
     if (pickedDate != null) {
-      setState(() {
-        _date = pickedDate;
-      });
+      if (!_disposed) {
+        setState(() {
+          _date = pickedDate;
+        });
+      }
       await _getCategorySpendings();
     }
   }
@@ -69,9 +76,12 @@ class _DashboardPageState extends State<DashboardPage> {
     final rawSpendings = result["spendings"] as List<dynamic>;
 
     final spendings = rawSpendings.map(SpendingEntry.fromJson).toList();
-    setState(() {
-      _spendings = spendings;
-    });
+
+    if (!_disposed) {
+      setState(() {
+        _spendings = spendings;
+      });
+    }
 
     await _getCategorySpendings();
   }
@@ -91,13 +101,22 @@ class _DashboardPageState extends State<DashboardPage> {
           (categorySpendings[spending.category.identifier] ?? 0);
     }
 
-    setState(() {
-      _categorySpendings = categorySpendings;
-    });
+    if (!_disposed) {
+      setState(() {
+        _categorySpendings = categorySpendings;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 
   @override
   void initState() {
+    _disposed = false;
     _date = DateTime.now();
     super.initState();
     _getHistory();
