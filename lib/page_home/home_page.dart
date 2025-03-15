@@ -5,7 +5,9 @@ import 'package:wealth_and_health_frontend/components/navbar.dart';
 import 'package:wealth_and_health_frontend/page_home/dashboard_page.dart';
 import 'package:wealth_and_health_frontend/page_home/map_page.dart';
 import 'package:wealth_and_health_frontend/page_home/new_record.dart';
+import 'package:wealth_and_health_frontend/page_home/settings_page.dart';
 import 'package:wealth_and_health_frontend/styles.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({super.key});
@@ -18,6 +20,15 @@ class _HomePageState extends State<HomePage> {
   late PageController _pageController;
   double _currentPage = 0.0;
 
+  Future<void> checkLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey("token")) {
+      return;
+    }
+
+    Navigator.pushNamed(context, "/login");
+  }
+
   @override
   void initState() {
     super.initState();
@@ -27,6 +38,7 @@ class _HomePageState extends State<HomePage> {
         _currentPage = _pageController.page ?? 0.0;
       });
     });
+    // checkLogin();
   }
 
   @override
@@ -46,12 +58,7 @@ class _HomePageState extends State<HomePage> {
                     ? NeverScrollableScrollPhysics()
                     : BouncingScrollPhysics(),
             controller: _pageController,
-            children: [
-              NewRecord(),
-              DashboardPage(),
-              MapPage(),
-              Text("hi3", style: TextStyle(color: AppStyles.primaryForeground)),
-            ],
+            children: [NewRecord(), DashboardPage(), MapPage(), SettingsPage()],
           ),
           Positioned(
             bottom: 20,

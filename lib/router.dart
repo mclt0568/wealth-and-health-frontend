@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:wealth_and_health_frontend/page_login/login_page.dart';
 
 import 'page_home/home_page.dart';
 
@@ -10,6 +11,11 @@ class AppRouter {
     // Home Page (Static)
     if (uri.path == '/') {
       return PageRouteBuilder(pageBuilder: (_, __, ___) => HomePage());
+    }
+
+    // Login Page (Static)
+    if (uri.path == '/login') {
+      return PageRouteBuilder(pageBuilder: (_, __, ___) => LoginPage());
     }
 
     // // Details Page (Dynamic with query parameters)
