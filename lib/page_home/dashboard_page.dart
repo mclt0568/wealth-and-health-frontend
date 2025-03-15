@@ -1,9 +1,16 @@
+import 'dart:convert';
+
 import 'package:carbon_icons/carbon_icons.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:wealth_and_health_frontend/constants/entry_categories.dart';
+import 'package:wealth_and_health_frontend/models/entry_category.dart';
+import 'package:wealth_and_health_frontend/models/spending_entry.dart';
+import 'package:wealth_and_health_frontend/requests.dart';
 import 'package:wealth_and_health_frontend/styles.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -15,23 +22,22 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   late DateTime _date;
-  final Map<String, IconData> _catIcon = {"food": CarbonIcons.noodle_bowl};
-  late Map<String, double> _analytics;
+  Map<int, double> _categorySpendings = {};
 
-  Future<void> _updateAnalytic() async {}
+  List<SpendingEntry> _spendings = [];
 
   Future<void> _nextDay() async {
     setState(() {
       _date = _date.add(Duration(days: 1));
     });
-    await _updateAnalytic();
+    await _getCategorySpendings();
   }
 
   Future<void> _prevDay() async {
     setState(() {
       _date = _date.subtract(Duration(days: 1));
     });
-    await _updateAnalytic();
+    await _getCategorySpendings();
   }
 
   Future<void> chooseDate() async {
@@ -46,15 +52,53 @@ class _DashboardPageState extends State<DashboardPage> {
       setState(() {
         _date = pickedDate;
       });
-      await _updateAnalytic();
+      await _getCategorySpendings();
     }
+  }
+
+  Future<void> _getHistory() async {
+    final response = await FetchRequest("spendings").commit();
+    final result = jsonDecode(response.body);
+
+    if (result["error"]) {
+      Fluttertoast.showToast(msg: result["message"] ?? "");
+      return;
+    }
+
+    final rawSpendings = result["spendings"] as List<dynamic>;
+    final spendings = rawSpendings.map(SpendingEntry.fromJson).toList();
+    setState(() {
+      _spendings = spendings;
+    });
+
+    await _getCategorySpendings();
+  }
+
+  Future<void> _getCategorySpendings() async {
+    final spendingsToday = _spendings.where((spending) {
+      return listEquals(
+        [spending.date.day, spending.date.month, spending.date.year],
+        [_date.day, _date.month, _date.year],
+      );
+    });
+
+    final Map<int, double> categorySpendings = {};
+    for (var spending in spendingsToday) {
+      categorySpendings[spending.category.identifier] =
+          spending.price +
+          (categorySpendings[spending.category.identifier] ?? 0);
+    }
+
+    setState(() {
+      _categorySpendings = categorySpendings;
+    });
   }
 
   @override
   void initState() {
     _date = DateTime.now();
-    _analytics = {"food": 0.30};
     super.initState();
+    _getHistory();
   }
 
   @override
@@ -138,18 +182,21 @@ class _DashboardPageState extends State<DashboardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (var entry in _analytics.entries)
+                for (var spendings in _categorySpendings.entries)
                   Row(
                     children: [
-                      Icon(_catIcon[entry.key]),
+                      Icon(categories[spendings.key].icon),
                       SizedBox(width: 5),
                       IntrinsicWidth(
-                        child: Text(entry.key, style: AppStyles.paragraph),
+                        child: Text(
+                          categories[spendings.key].name,
+                          style: AppStyles.paragraph,
+                        ),
                       ),
                       SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          entry.value.toString(),
+                          spendings.value.toString(),
                           style: AppStyles.accentedParagraph,
                         ),
                       ),
