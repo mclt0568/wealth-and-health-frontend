@@ -17,7 +17,7 @@ class _MapPageState extends State<MapPage> {
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
 
-  LatLng _currentPosition = LatLng(37.42796133580664, -122.085749655962);
+  LatLng _currentPosition = LatLng(0, 0);
 
   Set<Marker> _markers = {}; // Store all markers
 

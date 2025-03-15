@@ -1,11 +1,14 @@
 import 'package:carbon_icons/carbon_icons.dart';
 import 'package:flutter/widgets.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:wealth_and_health_frontend/components/app_skeleton.dart';
 import 'package:wealth_and_health_frontend/components/navbar.dart';
 import 'package:wealth_and_health_frontend/page_home/dashboard_page.dart';
 import 'package:wealth_and_health_frontend/page_home/map_page.dart';
 import 'package:wealth_and_health_frontend/page_home/new_record.dart';
 import 'package:wealth_and_health_frontend/page_home/settings_page.dart';
+import 'package:wealth_and_health_frontend/requests.dart';
 import 'package:wealth_and_health_frontend/styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,13 +23,16 @@ class _HomePageState extends State<HomePage> {
   late PageController _pageController;
   double _currentPage = 0.0;
 
-  Future<void> checkLogin() async {
+  Future<bool> _checkLogin() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey("token")) {
-      return;
+      final token = prefs.getString("token") ?? "";
+      FetchRequest.setAuth(token);
+      return true;
     }
 
-    Navigator.pushNamed(context, "/login");
+    Navigator.popAndPushNamed(context, "/login");
+    return false;
   }
 
   @override
@@ -38,7 +44,7 @@ class _HomePageState extends State<HomePage> {
         _currentPage = _pageController.page ?? 0.0;
       });
     });
-    // checkLogin();
+    _checkLogin();
   }
 
   @override

@@ -1,8 +1,14 @@
+import 'dart:convert';
+
 import 'package:carbon_icons/carbon_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:wealth_and_health_frontend/constants/entry_categories.dart';
 import 'package:wealth_and_health_frontend/models/entry_category.dart';
+import 'package:wealth_and_health_frontend/requests.dart';
 import 'package:wealth_and_health_frontend/styles.dart';
 import 'package:intl/intl.dart';
 
@@ -19,15 +25,10 @@ class _NewRecordState extends State<NewRecord> {
   late TextEditingController _remarkController;
   late FocusNode _remarkNode;
   late DateTime _date;
+  LatLng _currentPosition = LatLng(0, 0);
   late int _category;
 
-  final List<EntryCategory> _categories = [
-    EntryCategory(name: "Food", icon: CarbonIcons.noodle_bowl),
-    EntryCategory(name: "1", icon: CarbonIcons.noodle_bowl),
-    EntryCategory(name: "2", icon: CarbonIcons.noodle_bowl),
-    EntryCategory(name: "2", icon: CarbonIcons.noodle_bowl),
-    EntryCategory(name: "2", icon: CarbonIcons.noodle_bowl),
-  ];
+  final List<EntryCategory> _categories = categories;
 
   Future<void> chooseDate() async {
     DateTime? pickedDate = await showDatePicker(
@@ -44,6 +45,65 @@ class _NewRecordState extends State<NewRecord> {
     }
   }
 
+  Future<void> _submit() async {
+    final price = double.parse(_priceController.text);
+    final remark = _remarkController.text;
+    final category = _category;
+    final day = _date.day;
+    final month = _date.month;
+    final year = _date.year;
+    final date = "$day/$month/$year";
+
+    Map<String, dynamic> payload = {
+      "price": price,
+      "category": category,
+      "date": date,
+      "lat": _currentPosition.latitude,
+      "long": _currentPosition.longitude,
+    };
+
+    if (remark.trim() != "") {
+      payload["remark"] = remark;
+    }
+
+    final response =
+        await FetchRequest("spendings").post().attach(payload).commit();
+
+    final Map<String, dynamic> result = jsonDecode(response.body);
+
+    _priceController.text = "0.00";
+    _remarkController.text = "";
+    _category = 0;
+    _date = DateTime.now();
+    Fluttertoast.showToast(msg: "Submitted", toastLength: Toast.LENGTH_SHORT);
+  }
+
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return;
+    }
+
+    // Check for permissions
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.deniedForever) {
+        return;
+      }
+    }
+
+    // Get current position
+    Position position = await Geolocator.getCurrentPosition();
+    setState(() {
+      _currentPosition = LatLng(position.latitude, position.longitude);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +114,7 @@ class _NewRecordState extends State<NewRecord> {
     _remarkNode = FocusNode();
     _remarkController = TextEditingController();
     _date = DateTime.now();
+    _getCurrentLocation();
   }
 
   @override
@@ -240,14 +301,7 @@ class _NewRecordState extends State<NewRecord> {
               child: InkWell(
                 onTap: () {
                   setState(() {
-                    _priceController.text = "0.00";
-                    _remarkController.text = "";
-                    _category = 0;
-                    _date = DateTime.now();
-                    Fluttertoast.showToast(
-                      msg: "Submitted",
-                      toastLength: Toast.LENGTH_SHORT,
-                    );
+                    _submit();
                   });
                 }, // SUBMIT
                 child: Container(

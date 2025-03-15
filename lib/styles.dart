@@ -23,6 +23,12 @@ class AppStyles {
     color: AppStyles.primaryForeground,
   );
 
+  static const TextStyle welcomeMessage = TextStyle(
+    fontSize: 30,
+    fontWeight: FontWeight.w400,
+    color: AppStyles.primaryForeground,
+  );
+
   static const TextStyle paragraph = TextStyle(
     fontSize: 20,
     color: AppStyles.primaryForeground,
