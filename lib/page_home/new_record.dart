@@ -27,6 +27,7 @@ class _NewRecordState extends State<NewRecord> {
   late DateTime _date;
   LatLng _currentPosition = LatLng(0, 0);
   late int _category;
+  late bool _disposed;
 
   final List<EntryCategory> _categories = categories;
 
@@ -99,13 +100,16 @@ class _NewRecordState extends State<NewRecord> {
 
     // Get current position
     Position position = await Geolocator.getCurrentPosition();
-    setState(() {
-      _currentPosition = LatLng(position.latitude, position.longitude);
-    });
+    if (!_disposed) {
+      setState(() {
+        _currentPosition = LatLng(position.latitude, position.longitude);
+      });
+    }
   }
 
   @override
   void initState() {
+    _disposed = false;
     super.initState();
     _category = 0;
     _priceNode = FocusNode();
@@ -119,6 +123,7 @@ class _NewRecordState extends State<NewRecord> {
 
   @override
   void dispose() {
+    _disposed = true;
     super.dispose();
     _priceController.dispose();
     _priceNode.dispose();
