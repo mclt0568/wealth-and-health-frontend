@@ -25,6 +25,7 @@ class _DashboardPageState extends State<DashboardPage> {
   late DateTime _date;
   Map<int, double> _categorySpendings = {};
   late bool _disposed;
+  String _aiText = "";
 
   List<SpendingEntry> _spendings = [];
 
@@ -104,6 +105,19 @@ class _DashboardPageState extends State<DashboardPage> {
     if (!_disposed) {
       setState(() {
         _categorySpendings = categorySpendings;
+      });
+    }
+  }
+
+  Future<void> _getAI(route) async {
+    final response = await FetchRequest("advice/$route").commit();
+    final result = jsonDecode(response.body) as Map<String, String>;
+
+    final message = result["message"] ?? "";
+
+    if (!_disposed) {
+      setState(() {
+        _aiText = message;
       });
     }
   }
@@ -241,11 +255,13 @@ class _DashboardPageState extends State<DashboardPage> {
                     child: Material(
                       type: MaterialType.transparency,
                       child: InkWell(
-                        onTap: () {},
+                        onTap: () {
+                          _getAI("spending");
+                        },
                         child: Padding(
                           padding: EdgeInsets.all(20),
                           child: Text(
-                            "Get Spending Advice",
+                            "Spending Advice",
                             style: AppStyles.paragraph,
                           ),
                         ),
@@ -260,11 +276,13 @@ class _DashboardPageState extends State<DashboardPage> {
                     child: Material(
                       type: MaterialType.transparency,
                       child: InkWell(
-                        onTap: () {},
+                        onTap: () {
+                          _getAI("estimation");
+                        },
                         child: Padding(
                           padding: EdgeInsets.all(20),
                           child: Text(
-                            "Get Health Advice",
+                            "Spending Prediction",
                             style: AppStyles.paragraph,
                           ),
                         ),
@@ -275,6 +293,10 @@ class _DashboardPageState extends State<DashboardPage> {
               ],
             ),
           ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(20,10,20,0),
+            child: Text(_aiText, style: AppStyles.paragraph),
+          )
         ],
       ),
     );
